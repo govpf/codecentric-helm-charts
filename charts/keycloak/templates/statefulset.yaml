@@ -56,7 +56,7 @@ spec:
             - |
               echo 'Waiting for PostgreSQL to become ready...'
 
-              until printf "." && nc -z -w 2 {{ include "keycloak.postgresql.fullname" . }} {{ .Values.postgresql.service.port }}; do
+              until printf "." && nc -z -w 2 {{ include "postgresql.primary.svc.headless" .Subcharts.postgresql }} {{ .Values.postgresql.primary.service.ports.postgresql }}; do
                   sleep 2;
               done;
 
@@ -88,18 +88,18 @@ spec:
             - name: DB_VENDOR
               value: postgres
             - name: DB_ADDR
-              value: {{ include "keycloak.postgresql.fullname" . }}
+              value: {{ include "postgresql.primary.svc.headless" .Subcharts.postgresql }}
             - name: DB_PORT
-              value: {{ .Values.postgresql.service.port | quote }}
+              value: {{ .Values.postgresql.primary.service.ports.postgresql | quote }}
             - name: DB_DATABASE
-              value: {{ .Values.postgresql.postgresqlDatabase | quote }}
+              value: {{ .Values.postgresql.auth.database | quote }}
             - name: DB_USER
-              value: {{ .Values.postgresql.postgresqlUsername | quote }}
+              value: {{ .Values.postgresql.auth.username | quote }}
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "keycloak.postgresql.fullname" . }}
-                  key: postgresql-password
+                  name: {{ include "postgresql.secretName" .Subcharts.postgresql }}
+                  key: password
             {{- end }}
             {{- with .Values.extraEnv }}
             {{- tpl . $ | nindent 12 }}
